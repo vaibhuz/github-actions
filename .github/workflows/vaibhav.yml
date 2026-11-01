@@ -1,24 +1,31 @@
+name: Terraform Deployment
+
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:   # ✅ Manual trigger only
+    branches:
+      - main
+
+# Required for GitHub OIDC
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  terraform:
+  deploy:
     runs-on: ubuntu-latest
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_DEFAULT_REGION: us-east-1 # change if needed
+
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          terraform_version: 1.9.8
-      - name: Terraform Init
-        run: terraform init
-      - name: Terraform plan
-        run: terraform plan -out=tfplan
-      - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
+          role-to-assume: arn:aws:iam::468241617390:role/oidc-1
+          aws-region: us-east-1
+
+
+
+
+
+
