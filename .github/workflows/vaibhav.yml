@@ -1,31 +1,56 @@
+
 name: Terraform Deployment
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
-# Required for GitHub OIDC
+# Required for GitHub OIDC authentication
 permissions:
   id-token: write
   contents: read
 
 jobs:
   deploy:
+    name: Terraform Deploy
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout repository
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # Step 2: Install Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      # Step 3: Authenticate with AWS using OIDC
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::468241617390:role/oidc-1
           aws-region: us-east-1
 
+      # Step 4: Verify AWS authentication
+      - name: Verify AWS Identity
+        run: aws sts get-caller-identity
 
+      # Step 5: Initialize Terraform
+      - name: Terraform Init
+        run: terraform init
 
+      # Step 6: Validate Terraform
+      - name: Terraform Validate
+        run: terraform validate
 
+      # Step 7: Terraform Plan
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
 
-
+      # Step 8: Terraform Apply
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
